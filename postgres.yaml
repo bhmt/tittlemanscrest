@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:13
+    container_name: gotest-pg-local-db
+    ports:
+      - 5432:5432
+    environment:
+      - PGUSER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=gotest
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "gotest"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    command:
+      [ "-path", "migrations", "-database",  "postgresql://postgres:postgres@postgres:5432/gotest?sslmode=disable", "up" ]
