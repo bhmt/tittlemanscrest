@@ -24,7 +24,7 @@ type qElement struct {
 }
 
 func (q *queue) Refresh(e *list.Element, ttl time.Duration) {
-	if e == nil {
+	if e == nil || ttl == 0 {
 		return
 	}
 
