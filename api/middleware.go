@@ -22,7 +22,7 @@ func MiddlewareRest(next http.Handler) http.Handler {
 	})
 }
 
-func MiddlewareBase(next http.Handler) http.Handler {
+func MiddlewareBase(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		buf, _ := io.ReadAll(r.Body)
 		r.Body = io.NopCloser(bytes.NewBuffer(buf))
@@ -33,7 +33,7 @@ func MiddlewareBase(next http.Handler) http.Handler {
 		r = r.WithContext(context.WithValue(r.Context(), requestIdContextKey, requestId))
 
 		start := time.Now()
-		slog.LogAttrs(
+		logger.LogAttrs(
 			r.Context(),
 			slog.LevelInfo,
 			"request",
@@ -49,7 +49,7 @@ func MiddlewareBase(next http.Handler) http.Handler {
 		next.ServeHTTP(iw, r)
 
 		end := time.Now()
-		slog.LogAttrs(
+		logger.LogAttrs(
 			r.Context(),
 			slog.LevelInfo,
 			"response",
@@ -57,6 +57,5 @@ func MiddlewareBase(next http.Handler) http.Handler {
 			slog.Time("time", end.UTC()),
 			slog.Duration("duration", end.Sub(start)),
 			slog.Int("status", iw.StatusCode))
-
 	})
 }
