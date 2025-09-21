@@ -8,12 +8,11 @@ import (
 )
 
 func Run(worker func(context.Context)) {
-	ctx, _ /*cancel*/ := signal.NotifyContext(
+	ctx, cancel := signal.NotifyContext(
 		context.Background(),
-		syscall.SIGINT,
-		syscall.SIGTERM,
 		os.Interrupt,
-		os.Kill,
+		syscall.SIGTERM,
 	)
+	defer cancel()
 	worker(ctx)
 }
