@@ -27,7 +27,7 @@ func MiddlewareBase(logger *slog.Logger, next http.Handler) http.Handler {
 		buf, _ := io.ReadAll(r.Body)
 		r.Body = io.NopCloser(bytes.NewBuffer(buf))
 
-		iw := newResponseWriter(w)
+		i := newIntercept(w)
 
 		requestId := helper.GetHeaderRequestId(r)
 		r = r.WithContext(context.WithValue(r.Context(), requestIdContextKey, requestId))
@@ -46,7 +46,7 @@ func MiddlewareBase(logger *slog.Logger, next http.Handler) http.Handler {
 			slog.String("ip", r.RemoteAddr),
 		)
 
-		next.ServeHTTP(iw, r)
+		next.ServeHTTP(i, r)
 
 		end := time.Now()
 		logger.LogAttrs(
@@ -56,6 +56,6 @@ func MiddlewareBase(logger *slog.Logger, next http.Handler) http.Handler {
 			slog.String("request_id", requestId),
 			slog.Time("time", end.UTC()),
 			slog.Duration("duration", end.Sub(start)),
-			slog.Int("status", iw.StatusCode))
+			slog.Int("status", i.StatusCode))
 	})
 }

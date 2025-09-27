@@ -1,25 +1,41 @@
 package api
 
-import "net/http"
+import (
+	"bufio"
+	"net"
+	"net/http"
+)
 
-type responseWriter struct {
-	w          http.ResponseWriter
+type intercept struct {
+	http.ResponseWriter
 	StatusCode int
 }
 
-func newResponseWriter(w http.ResponseWriter) *responseWriter {
-	return &responseWriter{w: w, StatusCode: 200}
+func newIntercept(w http.ResponseWriter) *intercept {
+	return &intercept{ResponseWriter: w, StatusCode: 200}
 }
 
-func (rw responseWriter) Header() http.Header {
-	return rw.w.Header()
+func (i intercept) Header() http.Header {
+	return i.ResponseWriter.Header()
 }
 
-func (rw responseWriter) Write(data []byte) (int, error) {
-	return rw.w.Write(data)
+func (i intercept) Write(data []byte) (int, error) {
+	return i.ResponseWriter.Write(data)
 }
 
-func (rw *responseWriter) WriteHeader(statusCode int) {
-	rw.StatusCode = statusCode
-	rw.w.WriteHeader(statusCode)
+func (i *intercept) WriteHeader(statusCode int) {
+	i.StatusCode = statusCode
+	i.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (i *intercept) Flush() {
+	if f, ok := i.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+func (i *intercept) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if h, ok := i.ResponseWriter.(http.Hijacker); ok {
+		h.Hijack()
+	}
+	return nil, nil, nil
 }
