@@ -10,11 +10,11 @@ integ: cdown cup
 
 .PHONY: cup
 cup:
-	docker compose -f dc.postgres.yaml up -d --remove-orphans
+	docker compose -f dc.postgres.yaml -f dc.kafka.yaml up -d --remove-orphans
 
 .PHONY: cdown
 cdown:
-	docker compose -f dc.postgres.yaml down -v --remove-orphans
+	docker compose -f dc.postgres.yaml -f dc.kafka.yaml down -v --remove-orphans
 
 .PHONY: bench
 bench:
